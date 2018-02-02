@@ -10,5 +10,24 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
-.glide/
+# User-specific stuff:
+.idea/*
+
+# database files
+*.sqlite
+*.sqlite3
+bin/*.db
+
+# mitmproxy flows
+*.flow
+
+# binaries
+bin/gohjasmind
+bin/gohjasmincli
+bin/gohjasmin.config.json
+bin/log
+
+# packages
+pkg/*
+
+
