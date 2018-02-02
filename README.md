@@ -9,7 +9,7 @@ Based on OhJasmin (c) 2010-18 by [SwordLord - the coding crew](https://www.sword
 
 ## Introduction ##
 
-**GohJasmin** is a lightweight, self-hostable dynamic DNS server. Just add an instance of [djbdns](https://cr.yp.to/djbdns.html) or dbndns and you have your very own dynamic DNS service with your own domains. 
+**GohJasmin** is a lightweight, self-hostable dynamic DNS server written in Golang. Just add an instance of [djbdns](https://cr.yp.to/djbdns.html) or dbndns and you have your very own dynamic DNS service with your own domains. 
 
 (You could actually add any other DNS server to the mix. You will just need to write some glue code to export the dynamic data from the GohJasmin database into your DNS server. Thats not very difficult.)
 
