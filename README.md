@@ -19,7 +19,7 @@ If you are looking for a service to manage your dynamic dns records and have you
 
 Get the latest release here:
 
-A
+https://github.com/swordlordcodingcrew/gohjasmin
 
 ## Configuration ##
 
