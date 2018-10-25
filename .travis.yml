@@ -18,7 +18,6 @@ notifications:
 
 before_install:
   - cd
-  - go get -u -v github.com/sirupsen/logrus
   - go get -u -v github.com/spf13/viper
   - go get -u -v github.com/spf13/cobra
   - go get -u -v golang.org/x/crypto/bcrypt
@@ -38,6 +37,7 @@ before_install:
 # - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
 
 install:
+  - go get -u -v github.com/sirupsen/logrus
 
 script:
   - cd $HOME/gopath/src/github.com/swordlordcodingcrew/gohjasmin
