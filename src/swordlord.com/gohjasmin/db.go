@@ -1,4 +1,5 @@
 package gohjasmin
+
 /*-----------------------------------------------------------------------------
  **
  ** - GohJasmin -
@@ -27,47 +28,57 @@ package gohjasmin
  **
 -----------------------------------------------------------------------------*/
 import (
-	"log"
-	"github.com/jinzhu/gorm"
-	"swordlord.com/gohjasmin/model"
+	"database/sql"
+	"errors"
+	"github.com/sirupsen/logrus"
 )
 
-var db gorm.DB
+func UpdateDNSRecord(domain string, ip string) (int, error) {
 
-//
-func InitDatabase(activateLog bool) {
+	dbFile := GetStringFromConfig("db.file")
 
-	dialect := GetStringFromConfig("db.dialect")
-	args := GetStringFromConfig("db.args")
+	LogDebug("Opening DB file.", logrus.Fields{"DB": dbFile})
 
-	database, err := gorm.Open(dialect, args)
+	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
-		log.Fatalf("failed to connect database, %s", err)
-		panic("failed to connect database")
+		LogError("Opening DB file fails.", logrus.Fields{"error": err})
+		return 0, err
 	}
 
-	db = *database
-
-	db.SingularTable(true)
-
-	if activateLog {
-
-		db.LogMode(true)
+	if db == nil {
+		LogError("Opening DB file fails.", logrus.Fields{"error": "database is nil"})
+		return 0, errors.New("DB is nil")
 	}
 
-	db.AutoMigrate(&model.User{})
-	db.AutoMigrate(&model.Permission{})
-	db.AutoMigrate(&model.Domain{})
-}
+	defer db.Close()
 
-//
-func CloseDB() {
+	sql := GetStringFromConfig("db.sql.update")
+	if len(sql) == 0 {
+		LogError("Update DNS Record fails.", logrus.Fields{"error": "db.sql.update is missing from config file"})
+		return 0, errors.New("db.sql.update is missing from config file")
+	}
 
-	db.Close()
-}
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		LogError("Update DNS Record fails when preparing statement.", logrus.Fields{"error": err})
+		return 0, err
+	}
 
-//
-func GetDB() *gorm.DB {
+	LogDebug("Update statement.", logrus.Fields{"statement": stmt})
 
-	return &db
+	defer stmt.Close()
+
+	res, err := stmt.Exec(ip, domain)
+	if err != nil {
+		LogError("Update DNS Record fails while executing statement.", logrus.Fields{"error": err})
+		return 0, err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		LogError("Update DNS Record fails.", logrus.Fields{"error": err})
+		return 0, err
+	}
+
+	return int(rowsAffected), nil
 }

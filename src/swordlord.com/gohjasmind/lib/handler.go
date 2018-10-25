@@ -1,4 +1,5 @@
 package lib
+
 /*-----------------------------------------------------------------------------
  **
  ** - GohJasmin -
@@ -29,25 +30,29 @@ package lib
 
 import (
 	"github.com/gin-gonic/gin"
-	"swordlord.com/gohjasmin/tablemodule"
+	"github.com/sirupsen/logrus"
+	"swordlord.com/gohjasmin"
+
+	//"swordlord.com/gohjasmin/tablemodule"
 	"net/http"
-	"strings"
-	"fmt"
+	//"fmt"
 )
 
 // Legacy URL
 // https://username:password@members.dyndns.org/nic/update
 // 		?hostname=yourhostname&myip=ipaddress&wildcard=NOCHG&mx=NOCHG&backmx=NOCHG
+// TODO get hostname from param, not from login
 func LegacyUpdate(c *gin.Context) {
 
 	// ignored -> ?hostname=yourhostname&myip=ipaddress&wildcard=NOCHG&mx=NOCHG&backmx=NOCHG
-	replyNOCHG(c)
+	//replyNOCHG(c)
+	OhJasminUpdate(c)
 }
 
 // v3
 // https://{user}:{updater client key aka pwd}@members.dyndns.org/v3/update
 // 		?hostname={hostname}&myip={IP Address}
-
+// TODO get hostname from param, not from login
 func V3Update(c *gin.Context) {
 
 	// check if IP changed.
@@ -55,66 +60,62 @@ func V3Update(c *gin.Context) {
 	// if no, return nochg
 
 	// ignored -> &myip={IP Address}
-	replyNOCHG(c)
+	OhJasminUpdate(c)
 }
 
-// *********************************
-// OhJasmin Return Codes (as JSON)
-// { status: good }
-// { status: nochg }
-// { status: dnserr, error: description }
-func DDNSUpdate(c *gin.Context) {
+func OhJasminUpdate(c *gin.Context) {
 
-	permissions, exists := c.Get(AuthPermissions)
-	if !exists {
+	user := c.GetString(AuthUserName)
+	ip := c.ClientIP()
 
-		replyError(c, "You have no permission to update DNS records")
-		return
-	}
+	if gohjasmin.HasIPChanged(user, ip) {
 
-	remoteAddr := c.Request.RemoteAddr
+		rowsAffected, err := handleIPUpdate(user, ip)
+		if err != nil {
+			gohjasmin.LogError("DB Update error.", logrus.Fields{"error": err, "ip": ip})
+			replyError(c, "There was an error updating your IP")
+			return
+		}
 
-	// check first...
-	ip := strings.Split(remoteAddr, ":")[0]
+		// check if IP changed: if yes, return good, if no, return nochg
+		if rowsAffected == 0 {
 
-	// TODO clean Param domain before use
-	domain := c.Param("domain")
+			gohjasmin.LogInfo("DB not updated. Record not changed.", logrus.Fields{"ip": ip})
+			replyNOCHG(c)
 
-	neededPermission := fmt.Sprintf("ddns.update.%s", domain)
+		} else {
 
-	hasPermission := tablemodule.HasPermission(neededPermission, permissions.([]string))
-	if !hasPermission {
+			gohjasmin.LogInfo("DB updated.", logrus.Fields{"rows_affected": rowsAffected, "ip": ip})
 
-		replyError(c, "You have no permission to update DNS records")
-		return
-	}
-
-	handleIPUpdate(domain, ip, c)
-}
-
-func handleIPUpdate(domain string, ip string, c *gin.Context) {
-
-	rowsAffected, err := tablemodule.UpdateDomain(domain, ip)
-	if err != nil {
-
-		replyError(c, "There was an error updating your IP")
-		return
-	}
-
-	// check if IP changed.
-	// if yes, return good
-	// if no, return nochg
-	if rowsAffected == 0 {
-
-		replyNOCHG(c)
+			// make sure to set in memory representation of ip correctly
+			gohjasmin.ChangeIPInMemory(user, ip)
+			replyGOOD(c)
+		}
 
 	} else {
 
-		replyGOOD(c)
+		gohjasmin.LogDebug("IP was not changed.", logrus.Fields{"ip": ip})
+
+		replyNOCHG(c)
 	}
 }
 
+func handleIPUpdate(user string, ip string) (int, error) {
+
+	domain := gohjasmin.GetDomainFromUser(user)
+
+	rowsAffected, err := gohjasmin.UpdateDNSRecord(domain, ip)
+	if err != nil {
+
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
 func replyNOCHG(c *gin.Context) {
+
+	gohjasmin.LogDebug("Reply.", logrus.Fields{"status": "nochg"})
 
 	c.JSON(200, gin.H{
 		"status": "nochg",
@@ -123,6 +124,8 @@ func replyNOCHG(c *gin.Context) {
 
 func replyGOOD(c *gin.Context) {
 
+	gohjasmin.LogDebug("Reply.", logrus.Fields{"status": "good"})
+
 	c.JSON(200, gin.H{
 		"status": "good",
 	})
@@ -130,52 +133,10 @@ func replyGOOD(c *gin.Context) {
 
 func replyError(c *gin.Context, error string) {
 
+	gohjasmin.LogInfo("Error sent to client.", logrus.Fields{"error": error})
+
 	c.JSON(http.StatusInternalServerError, gin.H{
 		"status": "dnserr",
-		"error": error,
+		"error":  error,
 	})
 }
-
-
-/*
-func DDNSUpdateTest(c *gin.Context) {
-
-	user := c.MustGet(AuthUserName).(string)
-
-	//isAuthenticated := c.MustGet(lib.AuthIsAuthenticated).(bool)
-
-	permitted := hasPermission("add.user", c.MustGet(AuthPermissions).([]string))
-
-	fmt.Printf("User %s has permission: %v\n", user, permitted)
-
-	if permitted {
-
-		ip := c.Request.RemoteAddr
-
-		// TODO clean Param domain before use
-		domain := c.Param("domain")
-
-		c.JSON(http.StatusOK, gin.H{
-			"status": "nochg",
-			"message": "ddns updated from: " + user + " to ip: " + ip + " for domain: " + domain,
-		})
-
-	} else {
-
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "not authorised",
-		})
-	}
-}
-
-func ACMEUpdate(c *gin.Context) {
-	user := c.MustGet(AuthUserName).(string)
-	//isAuthenticated := c.MustGet(lib.AuthIsAuthenticated).(bool)
-
-	ip := c.Request.RemoteAddr
-
-	c.JSON(200, gin.H{
-		"message": "acme pushed from: " + user + " at: " + ip,
-	})
-}
-*/

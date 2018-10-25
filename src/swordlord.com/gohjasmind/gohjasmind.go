@@ -1,4 +1,5 @@
 package main
+
 /*-----------------------------------------------------------------------------
  **
  ** - GohJasmin -
@@ -29,12 +30,11 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"swordlord.com/gohjasmin"
-	"swordlord.com/gohjasmind/lib"
 	"net/http"
 	"net/http/pprof"
+	"swordlord.com/gohjasmin"
+	"swordlord.com/gohjasmind/lib"
 )
 
 func main() {
@@ -46,13 +46,17 @@ func main() {
 	env := gohjasmin.GetStringFromConfig("env")
 	bIsDevMode := env == "dev"
 
-	gohjasmin.InitDatabase(bIsDevMode)
-	defer gohjasmin.CloseDB()
+	//gohjasmin.InitDatabase(bIsDevMode)
+	//defer gohjasmin.CloseDB()
+
+	gohjasmin.InitLog()
 
 	if bIsDevMode {
 
 		gin.SetMode(gin.ReleaseMode)
 	}
+
+	gohjasmin.LoadAuth()
 
 	r := gin.Default()
 
@@ -63,6 +67,7 @@ func main() {
 	// Legacy URL
 	// https://username:password@members.dyndns.org/nic/update?hostname=yourhostname&myip=ipaddress&wildcard=NOCHG&mx=NOCHG&backmx=NOCHG
 	authorized.GET("/nic/update", lib.LegacyUpdate)
+	authorized.GET("/nic/update/", lib.LegacyUpdate)
 
 	// *********************************
 	// v3
@@ -70,18 +75,14 @@ func main() {
 	authorized.GET("/v3/update", lib.V3Update)
 
 	// *********************************
+	// v3
+	// https://{user}:{updater client key aka pwd}@members.dyndns.org/ohjasmin
+	authorized.GET("/ohjasmin", lib.OhJasminUpdate)
+
+	// *********************************
 	// Legacy and v3 Return codes
 	// https://help.dyn.com/remote-access-api/return-codes/
 	// basically good and nochg, as well as dnserr for errors
-
-	// *********************************
-	// OhJasmin URL
-	// https://{user}:{password}@dyndns.yourdomain.com/ddns/update/domain_to_update
-	authorized.GET("/ddns/update/:domain", lib.DDNSUpdate)
-
-	// *********************************
-	// acme domain validation keys
-	//authorized.GET("/acme/push/:domain", lib.ACMEUpdate)
 
 	// Debugging in Dev mode only
 	if bIsDevMode {
@@ -97,11 +98,12 @@ func main() {
 	host := gohjasmin.GetStringFromConfig("www.host")
 	port := gohjasmin.GetStringFromConfig("www.port")
 
-	fmt.Printf("gohjasmind running on %v:%v\n", host, port)
+	gohjasmin.LogInfoFmt("gohjasmind running on %v:%v\n", host, port)
 
 	if bIsDevMode {
-		fmt.Printf("try: curl http://user:pwd@%s:%s/ddns/update/my.dyndns.domain\n", host, port)
-		fmt.Printf("try: curl http://user:pwd@%s:%s/acme/push/my.dyndns.domain\n", host, port)
+		gohjasmin.LogDebugFmt("try: curl http://demouser:pwd@%s:%s/ddns/update/my.dyndns.domain\n", host, port)
+		gohjasmin.LogDebugFmt("try: curl http://demouser:pwd@%s:%s/v3/update\n", host, port)
+		gohjasmin.LogDebugFmt("try: curl http://demouser:pwd@%s:%s/ohjasmin\n", host, port)
 	}
 
 	r.Run(host + ":" + port) // listen and serve
@@ -115,5 +117,3 @@ func pprofHandler(h http.HandlerFunc) gin.HandlerFunc {
 		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }
-
-

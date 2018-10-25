@@ -1,4 +1,5 @@
 package lib
+
 /*-----------------------------------------------------------------------------
  **
  ** - GohJasmin -
@@ -28,22 +29,22 @@ package lib
 -----------------------------------------------------------------------------*/
 
 import (
-//"crypto/subtle"
-"encoding/base64"
-"strconv"
-"github.com/gin-gonic/gin"
-	"strings"
+	//"crypto/subtle"
+	"encoding/base64"
+	"github.com/gin-gonic/gin"
 	"net/http"
-	"swordlord.com/gohjasmin/tablemodule"
+	"strconv"
+	"strings"
+	"swordlord.com/gohjasmin"
+	//"swordlord.com/gohjasmin/tablemodule"
 )
 
 const AuthUserName = "user"
 const AuthIsAuthenticated = "isauthenticated"
-const AuthPermissions = "permissions"
 
 // BasicAuth returns a Basic HTTP Authorization middleware.
 // (see http://tools.ietf.org/html/rfc2617#section-1.2)
-func BasicAuth() gin.HandlerFunc{
+func BasicAuth() gin.HandlerFunc {
 
 	realm := "Basic realm=" + strconv.Quote("Oh Jasmin")
 
@@ -77,23 +78,21 @@ func BasicAuth() gin.HandlerFunc{
 		password := pair[1]
 
 		// TODO Check user and Password against the database
-		isAuthenticated, permissions := tablemodule.ValidateUserInDB(username, password)
+		isAuthenticated := gohjasmin.ValidateUser(username, password)
 		if isAuthenticated {
 
 			// The user credentials was found, set user's id to key AuthUserKey in this context, the userId can be read later using
 			// c.MustGet(gin.AuthUserKey)
 			c.Set(AuthUserName, username)
 			c.Set(AuthIsAuthenticated, true)
-
-			// TODO compile permissions or get them compiled globally (somehow)
-			c.Set(AuthPermissions, permissions)
 			return
+
 		} else {
 
 			c.Set(AuthIsAuthenticated, false)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status": "dnserr",
-				"error": "not authorised",
+				"error":  "not authorised",
 			})
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return

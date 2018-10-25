@@ -1,0 +1,76 @@
+language: go
+sudo: false
+
+go:
+  - "1.10"
+
+env:
+  global:
+    - VERSION=$(cat VERSION)
+
+# Skip the install step. Don't `go get` dependencies. Only build with the code
+# in vendor/
+#install: true
+
+# email me the results of the test runs.
+notifications:
+  email: true
+
+before_install:
+  - cd
+  - go get -u -v github.com/sirupsen/logrus
+  - go get -u -v github.com/spf13/viper
+  - go get -u -v github.com/spf13/cobra
+  - go get -u -v golang.org/x/crypto/bcrypt
+  - go get -u -v github.com/mattn/go-sqlite3
+  - go get -u -v github.com/mitchellh/go-homedir
+  - go get -u -v github.com/gin-gonic/gin
+  - go get -u -v github.com/olekukonko/tablewriter
+
+# Anything in before_script that returns a nonzero exit code will flunk the
+# build and immediately stop. It's sorta like having set -e enabled in bash.
+# Make sure golangci-lint is vendored by running
+#   dep ensure -add github.com/golangci/golangci-lint/cmd/golangci-lint
+# ...and adding this to your Gopkg.toml file.
+#   required = ["github.com/golangci/golangci-lint/cmd/golangci-lint"]
+#
+# before_script:
+# - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
+
+install:
+
+script:
+  - cd $HOME/gopath/src/github.com/swordlordcodingcrew/gohjasmin
+  - mkdir build
+
+  - GOPATH="$HOME/gopath/src/github.com/swordlordcodingcrew/gohjasmin:/home/travis/gopath"
+  - go build -o build/gohjasmind-v$VERSION -gcflags "all=-N -l" swordlord.com/gohjasmind
+#  - go build -o build/gohjasmincli-v$VERSION -gcflags "all=-N -l" swordlord.com/gohjasmincli
+#  - make
+#  go test -v swordlord.com/gohjasmind
+
+# With this configuration the build itself runs for every commit and PR
+# (which is nice, because we see if everything compiles fine), but the
+# deployment only happens when we actually push a tag as well containing
+# the version number of the new release.
+#
+# deploy:
+#   provider: releases
+#   skip_cleanup: true # Important, otherwise the build output would be purged.
+#   api_key:
+#     secure: lFGBaF...SJ1lDPDICY=
+#   file: bin/myawesomeapp
+#   on:
+#     repo: account/myawesomeproject
+#     tags: true # The deployment happens only if the commit has a tag.
+
+deploy:
+  provider: releases
+  file:
+    - build/gohjasmind-v$VERSION
+#    - build/gohjasmincli-v$VERSION
+  api_key:
+    secure: UDWn1xk0/brC95rTEZ2CEsT43rSgfLjOQtFOzW8JOKzf2fY+YZQg/to0KPOCr5pPduhdLDKjgN3+2xA0859uleFn0ASV/hsi1hKJLTQY2obbWwAg69XLrq2E3hrcJICd2QfUdnRX0SA6hvebY6RBhkqxr//wfKDcj98yiIB9/9BNLqQO5ko1mSTJdKVFISUy4ddRGAcaBE7EnykGcCdgwpdAiX1AMmqnEvC/ueKmxTWB5FglPaa2JYJ4JNXwwY+pqFf8VX3p7N1+uWn2CG9L5Y3dUQvqT/im5ITJiqkANoqDmxcoFKgAoJxd4SCErJrtEd7PQ1w1OggAYcug9wJGk1Idyjwexcy5odXEILOhz1TwovdtD2vi7YBfsOBXN047rYdYTYqw5nqNhUYX2F2jKa15O0JRdvJ4vrl4ireApaxXgutkZKHhe0/dOlyIARgao5bH3NYqZZzwai0VI1pSaN4eHxmnChovnNZeCTPpAQrnL98RUJAezHvhWDpW4MKzbaRjS5kc3txeUNuNyVhtK79cbWf34HgAaGwiRS/W4lHoPY1kMfL7Wue3PLPgMxn755sFs5ujCxmrrKyumaphAaXAYMvgpJxGb5yaIDq+pZCUPvqqlA1DwcquN8CaTPZ0B+iD+rj1Yc3DdCtWuRGazxNkcWX7j8z2gyYjDIhzASs=
+  skip_cleanup: true
+  on:
+    tags: true
