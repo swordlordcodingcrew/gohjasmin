@@ -18,7 +18,18 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go get abc
-
+        go get -u -v github.com/spf13/viper
+        go get -u -v github.com/spf13/cobra
+        go get -u -v golang.org/x/crypto/bcrypt
+        go get -u -v github.com/mattn/go-sqlite3
+        go get -u -v github.com/mitchellh/go-homedir
+        go get -u -v github.com/gin-gonic/gin
+        go get -u -v github.com/olekukonko/tablewriter
+        go get -u -v github.com/sirupsen/logrus
+    
+    - name: Prepare build
+      run: |
+        mkdir build
+        
     - name: Build
-      run: go build -v .
+      run: go build -o build/gohjasmind-vxx -gcflags "all=-N -l" swordlord.com/gohjasmind
