@@ -31,6 +31,9 @@ jobs:
     - name: Prepare build
       run: |
         mkdir build
+        pwd
+        echo $GOPATH
+        echo $GOROOT
         
     - name: Build
       run: go build -o build/gohjasmind-vxx -gcflags "all=-N -l" swordlord.com/gohjasmind
