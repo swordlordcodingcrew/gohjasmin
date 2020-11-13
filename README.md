@@ -3,9 +3,9 @@ GohJasmin
 
 ![Goh Jasmin](https://raw.githubusercontent.com/LordEidi/gohjasmin/master/ohjasmin.jpg)
 
-**GohJasmin** (c) 2017-18 by [SwordLord - the coding crew](https://www.swordlord.com/)
+**GohJasmin** (c) 2017-20 by [SwordLord - the coding crew](https://www.swordlord.com/)
 
-Based on [OhJasmin](https://sourceforge.net/projects/ohjasmindns/) (c) 2010-18 by [SwordLord - the coding crew](https://www.swordlord.com/)
+Based on [OhJasmin](https://sourceforge.net/projects/ohjasmindns/) (c) 2010-20 by [SwordLord - the coding crew](https://www.swordlord.com/)
 
 ## Introduction ##
 
@@ -71,15 +71,11 @@ Get the code from here:
 
 and build **GohJasmin** on your own with the following command:
 
-    go build -o build/gohjasmind -gcflags "all=-N -l" swordlord.com/gohjasmind
-    
-Make sure to have all necessary libs in your path. If that is too complicated, get one of the pre-compiled binaries. See above under *Installation*.
-    
+    make build
+        
 ## Dependencies ##
 
-Dependencies are managed in the "vendor" folder. Just go to the root of this project and "gb build all" to compile the projects binaries (for your platform).
-
-You could also have a look at the travis configuration file. There is a list of dependencies in there.
+Dependencies are managed with the help of Go Modules. The Makefile as well as the Go toolchain will make sure that you will download the required dependencies if needed.
 
 ## License ##
 
