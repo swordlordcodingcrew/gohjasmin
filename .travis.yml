@@ -16,6 +16,8 @@ env:
 notifications:
   email: true
 
+# get dependencies with this command
+# go list -f "{{.ImportPath}} {{.Imports}}" ./...
 before_install:
   - cd
   - go get -u -v github.com/spf13/viper
@@ -73,4 +75,4 @@ deploy:
     secure: f377fIrjzqzlLykPkTt0sGjVcbxDK3krH4hH/pzzdQO+qx44fmzfl0WkhuqyHhGnDZxsBd2P+kZK/n0tLFZ0LYAous2WJAzuKmQL3zUE+NAaeZZIMNRyM7Q4THBVYnPupIGsH6uI7OrnOc3RejV932ZbCNNQH/DSvgbvE7x0AhcDwZxC21CdfRR2Tmzhyo77dlwo23WiOPzO39uBYvsYJDhwNjMljB9hKeb/utkhZQX5cj6r3gvakNVO0VleAfEa5SwgabU6LOcAN6RKoCJgtBQHMOKU+6ayg1xZorC1MQ1QzaXWemu3CTKulMbk1JYPnzmvIzlm9DaShzIjTuxFzjxuNVPYUQytA6gVV5tMwkSutps3ONhpDlqiqXu5E5Z/BrPnvHGnPxKMTIaPzWEAr887UxgPlVgzAV0bUJV+ZI+yHSoapXAYFFuc7CYy0/ysADQXPpf09LmrGwJ78bItXjhhv2bmLAfZgrRLqcjbTtpYJW6IF3LhgZAWjuwX7ZIrL2V8QKVG2Kf4eUjFFjFG5R/55hJdN+DYBbjFFbR+XR+HUX639aBfbmgdGmDc2ii80CkAGDRV8pZpEsVf869JQlnNJQEx5BUZUhHvZapciCEV5834AWmC11EjTYvY7erwSHMFL9elgLA15QbiU3kBRY70mWhl+WwcDC+qiF8Tyb0=
   skip_cleanup: true
   on:
-    tags: false
+    tags: true

@@ -25,11 +25,13 @@ https://github.com/swordlordcodingcrew/gohjasmin/releases
 
 All parameters which can be configured right now are in the file *gohjasmin.config.js*. A default configuration file will be written on the first run of the application.
 
+It is important to know, that you should not have the sqlite DB in the same directory as you have the config as well as the authentication file. **gohjasmind** watches said directories and reacts on file changes. Since sqlite DB will change when being written to, this would create update events which are unecessary and slow down **gohjasmind**.
+
 ## Authentication ##
 
 Have a look at the bin/gohjasmin.auth file. It contains demo data on how to authenticate users. The file is only read when starting gohjasmind. The fields are:
 
-- domain (**gohjasmind** uses this domain to update the A record, not what the client submits)
+- domain
 - user
 - password hash (bcrypt, you can get your hash using the command below)
 - last ip seen (which currently does not work as expected)
@@ -44,11 +46,20 @@ To generate a brypted hash for your password authentication, use this command. Y
 
 Have a look at the bin/gohjasmind.service file.
 
+The commands to install and run **gohjasmind** as a systemd service are:
+
+    cp gohjasmin.service /lib/systemd/system/.
+    chmod 755 /lib/systemd/system/gohjasmin.service
+    systemctl enable gohjasmin.service
+    systemctl start gohjasmin.service
+    
+Please see journalctl for errors in your log.
+
 ## Update your IP ##
 
 Run gohjasmin.d in debug mode and it will dump some URLs you can use to update your DNS.
 
-The quickest probably is:
+The quickest is (although not standard with any DDnS Clients):
 
     curl http://demouser:pwd@host:port/ohjasmin
 
@@ -60,7 +71,9 @@ Get the code from here:
 
 and build **GohJasmin** on your own with the following command:
 
-    gb build all
+    go build -o build/gohjasmind -gcflags "all=-N -l" swordlord.com/gohjasmind
+    
+Make sure to have all necessary libs in your path. If that is too complicated, get one of the pre-compiled binaries. See above under *Installation*.
     
 ## Dependencies ##
 
