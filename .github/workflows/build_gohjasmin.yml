@@ -7,33 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Set up Go 1.12
+    - name: Set up Go 1.14
       uses: actions/setup-go@v1
       with:
-        go-version: 1.12
+        go-version: 1.14
       id: go
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
-    - name: Get dependencies
-      run: |
-        export PATH=$PATH:$(go env GOPATH)/bin
-        go get -u -v github.com/spf13/viper
-        go get -u -v github.com/spf13/cobra
-        go get -u -v golang.org/x/crypto/bcrypt
-        go get -u -v github.com/mattn/go-sqlite3
-        go get -u -v github.com/mitchellh/go-homedir
-        go get -u -v github.com/gin-gonic/gin
-        go get -u -v github.com/olekukonko/tablewriter
-        go get -u -v github.com/sirupsen/logrus
-    
     - name: Prepare build
       run: |
         mkdir build
         pwd
-        echo $GOPATH
-        echo $GOROOT
         
     - name: Build
-      run: go build -o build/gohjasmind-vxx -gcflags "all=-N -l" swordlord.com/gohjasmind
+      run: make build
