@@ -7,6 +7,8 @@ GohJasmin
 
 Based on [OhJasmin](https://sourceforge.net/projects/ohjasmindns/) (c) 2010-20 by [SwordLord - the coding crew](https://www.swordlord.com/)
 
+![Build and release gohjasmin](https://github.com/swordlordcodingcrew/gohjasmin/workflows/Build%20and%20release%20gohjasmin/badge.svg?branch=master)
+
 ## Introduction ##
 
 **GohJasmin** is a lightweight, self-hostable dynamic DNS server written in Golang. Just add an instance of [PowerDNS](https://powerdns.com/) and you have your very own dynamic DNS service with your own domains. 
