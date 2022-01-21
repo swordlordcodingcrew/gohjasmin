@@ -32,6 +32,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 )
 
 type LegacyParams struct {
@@ -64,8 +65,11 @@ func LegacyUpdate(c *gin.Context) {
 	}
 
 	user := c.GetString(AuthUserName)
+	ip := c.ClientIP()
 
-	ohJasminUpdate(c, user, params.Hostname, params.MyIP)
+	//	ohJasminUpdate(c, user, params.Hostname, params.MyIP)
+	ohJasminUpdate(c, user, params.Hostname, ip)
+
 }
 
 // v3
@@ -89,8 +93,10 @@ func V3Update(c *gin.Context) {
 	}
 
 	user := c.GetString(AuthUserName)
+	ip := c.ClientIP()
 
-	ohJasminUpdate(c, user, params.Hostname, params.MyIP)
+	//	ohJasminUpdate(c, user, params.Hostname, params.MyIP)
+	ohJasminUpdate(c, user, params.Hostname, ip)
 }
 
 func GOhJasminUpdate(c *gin.Context) {
@@ -125,6 +131,8 @@ func ohJasminUpdate(c *gin.Context, user string, domain string, ip string) {
 		} else {
 
 			LogInfo("DB updated.", logrus.Fields{"rows_affected": rowsAffected, "ip": ip})
+
+			SetDirtyFile(domain)
 
 			// make sure to set in memory representation of ip correctly
 			ChangeIPInMemory(user, ip)
@@ -176,4 +184,31 @@ func replyError(c *gin.Context, error string) {
 		"status": "dnserr",
 		"error":  error,
 	})
+}
+
+func SetDirtyFile(domain string) {
+
+	dirtyPath := GetStringFromConfig("dirty_path")
+	if dirtyPath != "" {
+
+		last := dirtyPath[len(dirtyPath)-1:]
+		if last != "/" {
+			dirtyPath += "/"
+		}
+
+		fileName := dirtyPath + domain + ".dirty"
+		_, err := os.Stat(fileName)
+		if os.IsNotExist(err) {
+			file, err := os.Create(fileName)
+			if err != nil {
+
+				LogInfo("Error when trying to write dirty file.", logrus.Fields{"error": err})
+			} else {
+				LogInfo("Dirty file written.", logrus.Fields{"file": fileName})
+				defer file.Close()
+			}
+		} else {
+			LogInfo("No dirty file written. File still exists.", logrus.Fields{"file": fileName})
+		}
+	}
 }

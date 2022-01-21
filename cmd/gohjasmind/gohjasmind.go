@@ -4,7 +4,7 @@ package main
  **
  ** - GohJasmin -
  **
- ** Copyright 2017-20 by SwordLord - the coding crew - http://www.swordlord.com
+ ** Copyright 2017-22 by SwordLord - the coding crew - http://www.swordlord.com
  ** and contributing authors
  **
  ** This program is free software; you can redistribute it and/or modify it
@@ -47,13 +47,14 @@ func main() {
 
 	gohjaslib.InitLog()
 
-	if bIsDevMode {
+	if !bIsDevMode {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	gohjaslib.InitAuth()
 
 	r := gin.Default()
+	r.SetTrustedProxies([]string{"127.0.0.1"})
 
 	// Group using gin.BasicAuth() middleware
 	authorized := r.Group("/", gohjaslib.BasicAuth())

@@ -110,6 +110,7 @@ var defaultConfig = []byte(`
     "host": "127.0.0.1",
     "port": "8081"
   },
+  "dirty_path": "./dirty_domains/",
   "db": {
     "file": "gohjasmin.sqlite3",
     "sql.update": "UPDATE records SET content = ?1, change_date = CURRENT_TIMESTAMP WHERE name = ?2 AND type = 'A' AND content != ?1"
